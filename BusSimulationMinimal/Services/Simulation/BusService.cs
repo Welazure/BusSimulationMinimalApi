@@ -16,7 +16,7 @@ public class BusService : IBusService
             if (string.IsNullOrEmpty(bus.NextStationId)) continue;
             var distanceThisTick = simulationConfig.BusSpeedKmh / 3600.0;
             var previousPosition = bus.PositionOnRouteKm; // Store for precise arrival detection
-            bus.PositionOnRouteKm = (bus.PositionOnRouteKm + distanceThisTick) % routeConfig.totalRouteLengthKm;
+            bus.PositionOnRouteKm = (bus.PositionOnRouteKm + distanceThisTick) % routeConfig.TotalRouteLengthKm;
 
             var nextStation = state.Stations.FirstOrDefault(x => x.Id == bus.NextStationId);
             if (nextStation == null) continue;
@@ -28,14 +28,14 @@ public class BusService : IBusService
                 if (bus.PositionOnRouteKm >= nextStation.PositionOnRouteKm ||
                     previousPosition < nextStation.PositionOnRouteKm) // Station is after wrap or before wrap
                     arrived = true;
-            
+
             if (arrived)
             {
                 bus.PositionOnRouteKm = nextStation.PositionOnRouteKm; // Snap to station
 
-                if (nextStation.currentBusId == null)
+                if (nextStation.CurrentBusId == null)
                 {
-                    nextStation.currentBusId = bus.Id;
+                    nextStation.CurrentBusId = bus.Id;
                     bus.Status = BusStatus.AT_STATION;
                     bus.TimeSpentAtStationSec = 0;
                     bus.CurrentStationId = nextStation.Id;
@@ -43,10 +43,7 @@ public class BusService : IBusService
                 }
                 else
                 {
-                    if (!nextStation.WaitingBuses.Contains(bus.Id))
-                    {
-                        nextStation.WaitingBuses.Add(bus.Id);
-                    }
+                    if (!nextStation.WaitingBuses.Contains(bus.Id)) nextStation.WaitingBuses.Add(bus.Id);
                     bus.Status = BusStatus.WAITING_FOR_STATION_EMPTY;
                 }
             }
@@ -75,7 +72,7 @@ public class BusService : IBusService
             .FirstOrDefault(x => x.Id == (startAtStationIdOverride ?? "POOL"));
         if (startStation == null) throw new ArgumentException("Start station not found in route configuration.");
 
-        if (startStation.currentBusId != null)
+        if (startStation.CurrentBusId != null)
         {
             if (!startStation.WaitingBuses.Contains(bus.Id))
                 startStation.WaitingBuses.Add(bus.Id);
@@ -84,7 +81,7 @@ public class BusService : IBusService
         }
         else
         {
-            startStation.currentBusId = bus.Id;
+            startStation.CurrentBusId = bus.Id;
             bus.Status = BusStatus.AT_STATION;
             bus.TimeSpentAtStationSec = 0;
             bus.NextStationId = GetNextStationId(state, startStation.Id);

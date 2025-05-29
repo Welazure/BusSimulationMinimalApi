@@ -2,7 +2,7 @@
 
 public class PassengerConfig
 {
-    public int basePassengerSpawnRate { get; set; }
-    public List<TimeMultiplierPoint> generationMultiplierGraph { get; set; }
+    public int BasePassengerSpawnRate { get; set; }
+    public List<TimeMultiplierPoint> GenerationMultiplierGraph { get; set; }
     public Dictionary<string, List<DestinationWeightPoint>> DestinationWeights { get; set; }
 }

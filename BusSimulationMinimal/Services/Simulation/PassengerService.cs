@@ -13,24 +13,24 @@ public class PassengerService : IPassengerService
         if (state.CurrentTime.Second % Random.Shared.Next(2, 6) != 0)
             return;
         var passengerGenerationMultiplier = GetCurrentGenerationMultiplier(
-            state.CurrentTime.TimeOfDay, passengerConfig.generationMultiplierGraph);
+            state.CurrentTime.TimeOfDay, passengerConfig.GenerationMultiplierGraph);
         foreach (var station in state.Stations)
         {
             if (station.Name == "POOL")
                 continue;
-            var baseNum = passengerConfig.basePassengerSpawnRate * passengerGenerationMultiplier;
+            var baseNum = passengerConfig.BasePassengerSpawnRate * passengerGenerationMultiplier;
             var jitter = (Random.Shared.NextDouble() * 2 - 1) * simulationConfig.PassengerSpawnJitterFactor *
                          baseNum;
             var numToSpawn = (int)Math.Max(0, Math.Round(baseNum + jitter));
 
             List<DestinationWeightPoint> destinationWeightPoints = new();
-            int totalWeight = 0;
+            var totalWeight = 0;
             if (passengerConfig.DestinationWeights.TryGetValue(station.Id, out var destinationsFromThisOrigin))
             {
                 if (destinationsFromThisOrigin.Count != 0)
                 {
                     // This sum should ideally be pre-calculated when config is loaded, per origin.
-                    int totalWeightForThisOrigin = destinationsFromThisOrigin.Sum(dw => dw.Weight);
+                    var totalWeightForThisOrigin = destinationsFromThisOrigin.Sum(dw => dw.Weight);
                     if (totalWeightForThisOrigin > 0)
                     {
                         // Weights are already normalized to 100, no need to adjust.
@@ -57,9 +57,10 @@ public class PassengerService : IPassengerService
                 passenger.Status = PassengerStatus.WAITING;
 
                 var weight = Random.Shared.Next(0, totalWeight);
-                var destinationStationId = destinationWeightPoints.FirstOrDefault(w => (weight -= w.Weight) < 0)?.DestinationStationId;
+                var destinationStationId = destinationWeightPoints.FirstOrDefault(w => (weight -= w.Weight) < 0)
+                    ?.DestinationStationId;
                 passenger.DestinationStationId = destinationStationId ?? string.Empty;
-                if(!string.IsNullOrEmpty(destinationStationId))
+                if (!string.IsNullOrEmpty(destinationStationId))
                     station.WaitingPassengers.Add(passenger);
             }
         }

@@ -15,15 +15,15 @@
  * }
  * }
  */
-public class Error(string code, string message, Error.Details[] details)
+public class Error(string code, string message, Error.ErrorDetails[] details)
 {
-    public string code { get; set; }
-    public string message { get; set; }
-    public Details[] details { get; set; }
+    public string Code { get; set; }
+    public string Message { get; set; }
+    public ErrorDetails[] Details { get; set; }
 
-    public class Details(string field, string issue)
+    public class ErrorDetails(string field, string issue)
     {
-        public string field { get; set; } = field;
-        public string issue { get; set; } = issue;
+        public string Field { get; set; } = field;
+        public string Issue { get; set; } = issue;
     }
 }

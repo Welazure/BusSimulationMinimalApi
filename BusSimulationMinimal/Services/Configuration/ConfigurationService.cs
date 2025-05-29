@@ -44,37 +44,34 @@ public class ConfigurationService : IConfigurationService
         return BasePath;
     }
 
-    public PassengerConfig? getPassengerConfig()
+    public PassengerConfig? PassengerConf
     {
-        return _passengerConfig;
+        get => _passengerConfig;
+        set
+        {
+            _passengerConfig = value;
+            SavePassengerConfig();
+        }
     }
 
-    public RouteConfig? getRouteConfig()
+    public RouteConfig? RouteConf
     {
-        return _routeConfig;
+        get => _routeConfig;
+        set
+        {
+            _routeConfig = value;
+            SaveRouteConfig();
+        }
     }
 
-    public SimulationConfig? getSimulationConfig()
+    public SimulationConfig? SimulationConf
     {
-        return _simulationConfig;
-    }
-
-    public void SetPassengerConfig(PassengerConfig passengerConfig)
-    {
-        _passengerConfig = passengerConfig;
-        SavePassengerConfig();
-    }
-
-    public void SetRouteConfig(RouteConfig routeConfig)
-    {
-        _routeConfig = routeConfig;
-        SaveRouteConfig();
-    }
-
-    public void SetSimulationConfig(SimulationConfig simulationConfig)
-    {
-        _simulationConfig = simulationConfig;
-        SaveSimulationConfig();
+        get => _simulationConfig;
+        set
+        {
+            _simulationConfig = value;
+            SaveSimulationConfig();
+        }
     }
 
     public void SavePassengerConfig()

@@ -5,7 +5,6 @@ namespace BusSimulationMinimal.Services.Simulation.States;
 
 public class SimulationState
 {
-    private object _IsRunningLock = new();
     public DateTime CurrentTime;
     public bool IsRunning;
     public List<Bus> Buses { get; private set; } = new();

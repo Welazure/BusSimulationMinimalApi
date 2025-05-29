@@ -7,22 +7,23 @@ namespace BusSimulationMinimal.Services.Simulation;
 
 public class StationService : IStationService
 {
-    private IBusService _busService;
+    private readonly IBusService _busService;
+
     public StationService(IBusService busService)
     {
         _busService = busService;
     }
+
     public void ProcessStationInteractions(SimulationState state, SimulationConfig simulationConfig,
         RouteConfig routeConfig)
     {
         foreach (var currStation in state.Stations)
-        {
-            if (currStation.currentBusId != null)
+            if (currStation.CurrentBusId != null)
             {
-                var bus = state.Buses.FirstOrDefault(x => x.Id == currStation.currentBusId);
+                var bus = state.Buses.FirstOrDefault(x => x.Id == currStation.CurrentBusId);
                 if (bus == null || bus.Status != BusStatus.AT_STATION || bus.CurrentStationId != currStation.Id)
                 {
-                    currStation.currentBusId = null;
+                    currStation.CurrentBusId = null;
                     continue;
                 }
 
@@ -33,7 +34,7 @@ public class StationService : IStationService
                     bus.Status = BusStatus.MOVING;
                     bus.CurrentStationId = null;
                     bus.TimeSpentAtStationSec = 0;
-                    currStation.currentBusId = null; // Free the station platform
+                    currStation.CurrentBusId = null; // Free the station platform
                     continue;
                 }
 
@@ -55,9 +56,9 @@ public class StationService : IStationService
                 }
 
                 // Process Alighting
-                List<Passenger> toBeAlighted =
+                var toBeAlighted =
                     bus.Passengers.Where(x => x.DestinationStationId == currStation.Id).ToList();
-                for (int i = 0; i < alightingCount; i++)
+                for (var i = 0; i < alightingCount; i++)
                 {
                     if (toBeAlighted.Count < 1) break;
                     var passenger = toBeAlighted[Random.Shared.Next(0, toBeAlighted.Count)];
@@ -65,8 +66,9 @@ public class StationService : IStationService
                     bus.Passengers.Remove(passenger);
                 }
 
-                var eligibleToBoard = currStation.WaitingPassengers.Where(x => x.Status == PassengerStatus.WAITING).ToList();
-                for (int i = 0; i < boardingCount; i++)
+                var eligibleToBoard = currStation.WaitingPassengers.Where(x => x.Status == PassengerStatus.WAITING)
+                    .ToList();
+                for (var i = 0; i < boardingCount; i++)
                 {
                     if (bus.Passengers.Count >= bus.Capacity) break;
                     if (eligibleToBoard.Count < 1) break;
@@ -85,7 +87,7 @@ public class StationService : IStationService
                     bus.Status = BusStatus.MOVING;
                     bus.CurrentStationId = null;
                     bus.TimeSpentAtStationSec = 0;
-                    currStation.currentBusId = null; // Free the station platform
+                    currStation.CurrentBusId = null; // Free the station platform
                 }
             }
             else if (currStation.WaitingBuses.Count > 0)
@@ -97,7 +99,7 @@ public class StationService : IStationService
                 if (waitingBus != null)
                 {
                     // Platform is now free, bus docks
-                    currStation.currentBusId = waitingBus.Id;
+                    currStation.CurrentBusId = waitingBus.Id;
                     waitingBus.Status = BusStatus.AT_STATION;
                     waitingBus.TimeSpentAtStationSec = 0;
                     waitingBus.CurrentStationId = currStation.Id;
@@ -105,6 +107,5 @@ public class StationService : IStationService
                     waitingBus.NextStationId = _busService.GetNextStationId(state, currStation.Id);
                 }
             }
-        }
     }
 }

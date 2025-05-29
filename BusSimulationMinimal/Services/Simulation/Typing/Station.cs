@@ -8,6 +8,6 @@ public class Station
     public double PositionOnRouteKm { get; set; }
     public List<Passenger> WaitingPassengers { get; set; } = new();
 
-    public Guid? currentBusId { get; set; }
+    public Guid? CurrentBusId { get; set; }
     public List<Guid> WaitingBuses { get; set; } = new();
 }
