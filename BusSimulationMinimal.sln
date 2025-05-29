@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusSimulationMinimal", "BusSimulationMinimal\BusSimulationMinimal.csproj", "{D4158A64-568B-4967-94ED-6AB63006F8CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D4158A64-568B-4967-94ED-6AB63006F8CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4158A64-568B-4967-94ED-6AB63006F8CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4158A64-568B-4967-94ED-6AB63006F8CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4158A64-568B-4967-94ED-6AB63006F8CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E50D051F-752D-42C5-B778-EBC92853848B}
+	EndGlobalSection
+EndGlobal
