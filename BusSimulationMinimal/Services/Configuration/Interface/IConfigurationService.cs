@@ -4,9 +4,9 @@ namespace BusSimulationMinimal.Services.Configuration.Interface;
 
 public interface IConfigurationService
 {
-    PassengerConfig? PassengerConf { get; set; }
-    RouteConfig? RouteConf { get; set; }
-    SimulationConfig? SimulationConf { get; set; }
+    PassengerConfig PassengerConf { get; set; }
+    RouteConfig RouteConf { get; set; }
+    SimulationConfig SimulationConf { get; set; }
 
     void CheckFilesExists(bool copyFiles = true);
     string GetBasePath();

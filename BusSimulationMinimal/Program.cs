@@ -23,7 +23,7 @@ public class Program
 
 
         builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
-        builder.Services.AddSingleton<Orchestrator>();
+        builder.Services.AddSingleton<IOrchestrator, NewOrchestrator>();
 
         builder.Services.AddTransient<IBusService, BusService>();
         builder.Services.AddTransient<IPassengerService, PassengerService>();
@@ -39,22 +39,7 @@ public class Program
         }
 
 
-        app.MapGet("/api/simulation/state", () => { return "hello world"; });
-        app.MapGet("/api/simulation/config", () => { return "hello world"; });
-        app.MapGet("/api/stations", () => { return "hello world"; });
-        app.MapGet("/api/stations/{id}/status", (int id) => { return id; });
-        app.MapGet("/api/buses", () => { return "hello world"; });
-        app.MapGet("/api/buses/{id}/status", (int id) => { return "hello world" + id; });
-
-
-        app.MapPost("/api/simulation/start", () => { return "hello world"; });
-        app.MapPost("/api/simulation/pause", () => { return "hello world"; });
-        app.MapPost("/api/simulation/reset", () => { return "hello world"; });
-        app.MapPost("/api/simulation/config", () => { return "hello world"; });
-        app.MapPost("/api/buses/dispatch", () => { return "hello world"; });
-        app.MapPost("/api/buses/{id}/returnToPool", (int id) => { return "hello world" + id; });
-
-
+        app.MapControllers();
         app.Run();
     }
 }

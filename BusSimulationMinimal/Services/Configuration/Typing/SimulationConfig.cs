@@ -2,7 +2,7 @@
 
 public class SimulationConfig
 {
-    public float BusSpeedKmh { get; set; }
+    public double BusSpeedKmh { get; set; }
     public float BaseStationStopTimeSeconds { get; set; }
     public int PassengerInteractionPerSecond { get; set; }
     public double TickIntervalMilliseconds { get; set; }

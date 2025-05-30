@@ -10,4 +10,19 @@ public class Station
 
     public Guid? CurrentBusId { get; set; }
     public List<Guid> WaitingBuses { get; set; } = new();
+
+    public Station DeepClone()
+    {
+        var clone = new Station
+        {
+            Id = Id,
+            Name = Name,
+            PositionOnRouteKm = PositionOnRouteKm,
+            CurrentBusId = CurrentBusId, // Guid? is a value type, direct copy
+            WaitingBuses = new List<Guid>(WaitingBuses), // New list, Guids are value types
+            WaitingPassengers = WaitingPassengers.Select(p => p.DeepClone()).ToList() // Deep clone list of passengers
+            // Copy other properties
+        };
+        return clone;
+    }
 }

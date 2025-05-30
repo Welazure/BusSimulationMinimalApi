@@ -8,9 +8,9 @@ public class ConfigurationService : IConfigurationService
 {
     private static readonly string BasePath = "./config/";
 
-    private PassengerConfig? _passengerConfig;
-    private RouteConfig? _routeConfig;
-    private SimulationConfig? _simulationConfig;
+    private PassengerConfig _passengerConfig;
+    private RouteConfig _routeConfig;
+    private SimulationConfig _simulationConfig;
 
     public ConfigurationService()
     {
@@ -44,7 +44,7 @@ public class ConfigurationService : IConfigurationService
         return BasePath;
     }
 
-    public PassengerConfig? PassengerConf
+    public PassengerConfig PassengerConf
     {
         get => _passengerConfig;
         set
@@ -54,7 +54,7 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
-    public RouteConfig? RouteConf
+    public RouteConfig RouteConf
     {
         get => _routeConfig;
         set
@@ -64,7 +64,7 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
-    public SimulationConfig? SimulationConf
+    public SimulationConfig SimulationConf
     {
         get => _simulationConfig;
         set
@@ -118,7 +118,8 @@ public class ConfigurationService : IConfigurationService
         if (File.Exists(filePath))
         {
             var json = File.ReadAllText(filePath);
-            _passengerConfig = JsonSerializer.Deserialize<PassengerConfig>(json);
+            _passengerConfig = JsonSerializer.Deserialize<PassengerConfig>(json) ??
+                               throw new JsonException("Failed to deserialize PassengerConfig.");
         }
         else
         {
@@ -132,7 +133,8 @@ public class ConfigurationService : IConfigurationService
         if (File.Exists(filePath))
         {
             var json = File.ReadAllText(filePath);
-            _routeConfig = JsonSerializer.Deserialize<RouteConfig>(json);
+            _routeConfig = JsonSerializer.Deserialize<RouteConfig>(json) ??
+                           throw new JsonException("Failed to deserialize RouteConfig.");
         }
         else
         {
@@ -146,7 +148,8 @@ public class ConfigurationService : IConfigurationService
         if (File.Exists(filePath))
         {
             var json = File.ReadAllText(filePath);
-            _simulationConfig = JsonSerializer.Deserialize<SimulationConfig>(json);
+            _simulationConfig = JsonSerializer.Deserialize<SimulationConfig>(json) ??
+                                throw new JsonException("Failed to deserialize SimulationConfig.");
         }
         else
         {

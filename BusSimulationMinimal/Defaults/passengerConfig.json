@@ -1,2 +1,70 @@
 {
+  "BasePassengerSpawnRate": 2,
+  "GenerationMultiplierGraph": [
+    {
+      "TimeOfDay": "07:00:00",
+      "Multiplier": 1.5
+    },
+    {
+      "TimeOfDay": "09:00:00",
+      "Multiplier": 1.0
+    },
+    {
+      "TimeOfDay": "12:00:00",
+      "Multiplier": 0.8
+    },
+    {
+      "TimeOfDay": "17:00:00",
+      "Multiplier": 2.0
+    },
+    {
+      "TimeOfDay": "19:00:00",
+      "Multiplier": 1.2
+    }
+  ],
+  "DestinationWeights": {
+    "STATION_A": [
+      {
+        "DestinationStationId": "STATION_B",
+        "Weight": 60
+      },
+      {
+        "DestinationStationId": "STATION_C",
+        "Weight": 30
+      },
+      {
+        "DestinationStationId": "POOL",
+        "Weight": 10
+      }
+    ],
+    "STATION_B": [
+      {
+        "DestinationStationId": "STATION_A",
+        "Weight": 25
+      },
+      {
+        "DestinationStationId": "STATION_C",
+        "Weight": 65
+      },
+      {
+        "DestinationStationId": "POOL",
+        "Weight": 10
+      }
+    ],
+    "STATION_C": [
+      {
+        "DestinationStationId": "STATION_A",
+        "Weight": 40
+      },
+      {
+        "DestinationStationId": "STATION_B",
+        "Weight": 50
+      },
+      {
+        "DestinationStationId": "POOL",
+        "Weight": 10
+      }
+    ]
+  }
 }
+    

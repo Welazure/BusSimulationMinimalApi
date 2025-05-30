@@ -1,5 +1,4 @@
-﻿using BusSimulationMinimal.Services.Configuration.Typing;
-using BusSimulationMinimal.Services.Simulation.Typing;
+﻿using BusSimulationMinimal.Services.Simulation.Typing;
 
 namespace BusSimulationMinimal.Services.Simulation.States;
 
@@ -7,8 +6,20 @@ public class SimulationState
 {
     public DateTime CurrentTime;
     public bool IsRunning;
-    public List<Bus> Buses { get; private set; } = new();
-    public List<Station> Stations { get; private set; } = new();
+    public List<Bus> Buses { get; set; } = new();
+    public List<Station> Stations { get; set; } = new();
     public double TotalRouteLengthKm { get; set; }
-    public SimulationConfig? ConfigSnapshot { get; set; }
+
+    public SimulationState DeepClone()
+    {
+        var clone = new SimulationState
+        {
+            CurrentTime = CurrentTime,
+            IsRunning = IsRunning,
+            TotalRouteLengthKm = TotalRouteLengthKm,
+            Buses = Buses.Select(b => b.DeepClone()).ToList(),
+            Stations = Stations.Select(s => s.DeepClone()).ToList()
+        };
+        return clone;
+    }
 }

@@ -1,0 +1,25 @@
+{
+  "TotalRouteLengthKm": 35.0,
+  "Stations": [
+    {
+      "Id": "POOL",
+      "Name": "Bus Pool",
+      "PositionOnRouteKm": 0.0
+    },
+    {
+      "Id": "STATION_A",
+      "Name": "North Hub",
+      "PositionOnRouteKm": 15.0
+    },
+    {
+      "Id": "STATION_B",
+      "Name": "Central Square",
+      "PositionOnRouteKm": 20.0
+    },
+    {
+      "Id": "STATION_C",
+      "Name": "South Terminal",
+      "PositionOnRouteKm": 30.0
+    }
+  ]
+}

@@ -16,7 +16,7 @@ public class PassengerService : IPassengerService
             state.CurrentTime.TimeOfDay, passengerConfig.GenerationMultiplierGraph);
         foreach (var station in state.Stations)
         {
-            if (station.Name == "POOL")
+            if (station.Id == "POOL")
                 continue;
             var baseNum = passengerConfig.BasePassengerSpawnRate * passengerGenerationMultiplier;
             var jitter = (Random.Shared.NextDouble() * 2 - 1) * simulationConfig.PassengerSpawnJitterFactor *

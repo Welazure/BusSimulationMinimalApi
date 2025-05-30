@@ -1,16 +1,17 @@
-﻿using BusSimulationMinimal.Services.Configuration.Typing;
+﻿using BusSimulationMinimal.Services.Configuration.Interface;
+using BusSimulationMinimal.Services.Simulation.Interface;
 
 namespace BusSimulationMinimal.Services.Simulation;
 
 public class SimulationBackgroundService : IHostedService, IDisposable
 {
-    private readonly SimulationConfig _config;
+    private readonly IConfigurationService _config;
     private readonly ILogger<SimulationBackgroundService> _logger;
-    private readonly Orchestrator _orchestrator;
+    private readonly IOrchestrator _orchestrator;
     private Timer? _timer;
 
-    public SimulationBackgroundService(ILogger<SimulationBackgroundService> logger, Orchestrator orchestrator,
-        SimulationConfig config)
+    public SimulationBackgroundService(ILogger<SimulationBackgroundService> logger, IOrchestrator orchestrator,
+        IConfigurationService config)
     {
         _logger = logger;
         _orchestrator = orchestrator;
@@ -26,7 +27,8 @@ public class SimulationBackgroundService : IHostedService, IDisposable
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("{serviceName} is starting.", nameof(SimulationBackgroundService));
-        _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(_config.TickIntervalMilliseconds));
+        _timer = new Timer(DoWork, null, TimeSpan.Zero,
+            TimeSpan.FromMilliseconds(_config.SimulationConf.TickIntervalMilliseconds));
         return Task.CompletedTask;
     }
 
@@ -42,5 +44,13 @@ public class SimulationBackgroundService : IHostedService, IDisposable
     private void DoWork(object? state)
     {
         _logger.LogInformation("SimulationBackgroundService is working.");
+        try
+        {
+            _orchestrator.PerformSimulationTick();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred during simulation tick.");
+        }
     }
 }

@@ -84,10 +84,12 @@ public class BusService : IBusService
             startStation.CurrentBusId = bus.Id;
             bus.Status = BusStatus.AT_STATION;
             bus.TimeSpentAtStationSec = 0;
+            bus.CurrentStationId = startStation.Id;
             bus.NextStationId = GetNextStationId(state, startStation.Id);
         }
 
         bus.PositionOnRouteKm = startStation.PositionOnRouteKm;
+        state.Buses.Add(bus);
     }
 
     public bool ReturnBusToPool(SimulationState state, Guid busId)
@@ -107,6 +109,25 @@ public class BusService : IBusService
         bus.Status = BusStatus.AT_STATION;
         bus.PositionOnRouteKm = state.Stations.FirstOrDefault(x => x.Id == "POOL")?.PositionOnRouteKm ?? 0;
         bus.NextStationId = GetNextStationId(state, bus.CurrentStationId);
+        return true;
+    }
+
+    public bool DestructBus(SimulationState state, Guid busId)
+    {
+        var bus = state.Buses.FirstOrDefault(b => b.Id == busId);
+        if (bus == null) return false;
+
+        // Remove the bus from the state
+        state.Buses.Remove(bus);
+
+        // Remove the bus from any station's current or waiting lists
+        foreach (var station in state.Stations)
+        {
+            if (station.CurrentBusId == busId)
+                station.CurrentBusId = null;
+            station.WaitingBuses.Remove(busId);
+        }
+
         return true;
     }
 }

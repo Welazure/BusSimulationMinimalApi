@@ -12,4 +12,22 @@ public class Bus
 
     public double TimeSpentAtStationSec { get; set; }
     public bool ReturningToPool { get; set; }
+
+    public Bus DeepClone()
+    {
+        var clone = new Bus
+        {
+            Id = Id,
+            PositionOnRouteKm = PositionOnRouteKm,
+            Capacity = Capacity,
+            Status = Status,
+            CurrentStationId = CurrentStationId,
+            NextStationId = NextStationId,
+            TimeSpentAtStationSec = TimeSpentAtStationSec,
+            ReturningToPool = ReturningToPool,
+            Passengers = Passengers.Select(p => p.DeepClone()).ToList() // Deep clone list of passengers
+            // Copy other properties
+        };
+        return clone;
+    }
 }

@@ -14,8 +14,8 @@ public class StationService : IStationService
         _busService = busService;
     }
 
-    public void ProcessStationInteractions(SimulationState state, SimulationConfig simulationConfig,
-        RouteConfig routeConfig)
+    public void ProcessStationInteractions(SimulationState state, RouteConfig routeConfig,
+        SimulationConfig simulationConfig)
     {
         foreach (var currStation in state.Stations)
             if (currStation.CurrentBusId != null)
@@ -23,13 +23,18 @@ public class StationService : IStationService
                 var bus = state.Buses.FirstOrDefault(x => x.Id == currStation.CurrentBusId);
                 if (bus == null || bus.Status != BusStatus.AT_STATION || bus.CurrentStationId != currStation.Id)
                 {
-                    currStation.CurrentBusId = null;
+                    bus.Status = BusStatus.MOVING;
+                    bus.CurrentStationId = null;
+                    bus.TimeSpentAtStationSec = 0;
+                    currStation.CurrentBusId = null; // Free the station platfo
+                    bus.NextStationId = _busService.GetNextStationId(state, currStation.Id);
                     continue;
                 }
 
                 // Bus is valid, calculate.
                 if (bus.TimeSpentAtStationSec >= simulationConfig.MaximumBusWaitTimeSeconds ||
-                    bus.Passengers.Count >= bus.Capacity)
+                    (bus.Passengers.Count >= bus.Capacity &&
+                     bus.Passengers.Count(x => x.DestinationStationId == currStation.Id) < 0))
                 {
                     bus.Status = BusStatus.MOVING;
                     bus.CurrentStationId = null;

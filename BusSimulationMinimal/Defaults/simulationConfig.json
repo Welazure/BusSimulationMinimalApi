@@ -1,0 +1,9 @@
+{
+  "BusSpeedKmh": 40.0,
+  "BaseStationStopTimeSeconds": 15.0,
+  "PassengerInteractionPerSecond": 5,
+  "TickIntervalMilliseconds": 1000.0,
+  "DefaultBusCapacity": 50,
+  "PassengerSpawnJitterFactor": 0.2,
+  "MaximumBusWaitTimeSeconds": 120
+}

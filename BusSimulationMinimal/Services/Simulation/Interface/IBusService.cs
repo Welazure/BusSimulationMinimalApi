@@ -15,4 +15,5 @@ public interface IBusService
     public string GetNextStationId(SimulationState state, string currentStationId);
     public bool ReturnBusToPool(SimulationState state, Guid busId);
     public bool MoveBusFromPool(SimulationState state, Guid busId);
+    bool DestructBus(SimulationState state, Guid busId);
 }
