@@ -9,9 +9,13 @@ public class Bus
     public BusStatus Status { get; set; }
     public string? CurrentStationId { get; set; }
     public string? NextStationId { get; set; }
+    
+    public int TimeSpentWithoutChange { get; set; }
 
     public double TimeSpentAtStationSec { get; set; }
     public bool ReturningToPool { get; set; }
+    
+    public bool GoingForward { get; set; } = true;
 
     public Bus DeepClone()
     {
@@ -25,6 +29,7 @@ public class Bus
             NextStationId = NextStationId,
             TimeSpentAtStationSec = TimeSpentAtStationSec,
             ReturningToPool = ReturningToPool,
+            GoingForward = GoingForward,
             Passengers = Passengers.Select(p => p.DeepClone()).ToList() // Deep clone list of passengers
             // Copy other properties
         };

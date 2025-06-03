@@ -4,8 +4,8 @@ namespace BusSimulationMinimal.Services.Simulation.States;
 
 public class SimulationState
 {
-    public DateTime CurrentTime;
-    public bool IsRunning;
+    public DateTime CurrentTime { get; set; }
+    public bool IsRunning { get; set; }
     public List<Bus> Buses { get; set; } = new();
     public List<Station> Stations { get; set; } = new();
     public double TotalRouteLengthKm { get; set; }

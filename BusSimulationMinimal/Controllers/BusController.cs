@@ -1,4 +1,5 @@
-﻿using BusSimulationMinimal.Services.Simulation.Interface;
+﻿using BusSimulationMinimal.Models;
+using BusSimulationMinimal.Services.Simulation.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BusSimulationMinimal.Controllers;
@@ -15,11 +16,27 @@ public class BusController : ControllerBase
     }
 
     [HttpPost("dispatch")]
-    public IActionResult DispatchBus([FromQuery] int? capacityOverride = null,
-        [FromQuery] string? startAtStationIdOverride = null)
+    public IActionResult DispatchBus([FromBody] DispatchBusRequestDto dispatchRequest)
     {
-        _orchestrator.DispatchBus(capacityOverride, startAtStationIdOverride);
-        return Created("/api/bus", "Bus dispatched");
+        if (dispatchRequest == null)
+        {
+            return BadRequest("Dispatch request data is missing.");
+        }
+
+
+        bool reversed = false; // Default to forward
+        if (!string.IsNullOrEmpty(dispatchRequest.Direction))
+        {
+            if (dispatchRequest.Direction.Equals("BACKWARD", StringComparison.OrdinalIgnoreCase))
+            {
+                reversed = true;
+            }
+        }
+        _orchestrator.DispatchBus(
+            dispatchRequest.Capacity,
+            dispatchRequest.StartAtStationId
+        );
+            return Ok(new { message = "Bus dispatch command issued." });
     }
 
     [HttpPost("{id:guid}/returnToPool")]

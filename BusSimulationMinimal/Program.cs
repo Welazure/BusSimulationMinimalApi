@@ -21,6 +21,26 @@ public class Program
                 new OpenApiInfo { Title = "Bus Simulation API", Version = "v1" });
         });
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(name: "MyAllowSpecificOrigins",
+                policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000") // Allow your frontend origin
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    // For development, if you might use other ports for frontend:
+                    // policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+                    //       .AllowAnyHeader()
+                    //       .AllowAnyMethod();
+
+                    // WARNING: For production, be more restrictive with origins, methods, and headers.
+                    // DO NOT use AllowAnyOrigin() in production without careful consideration.
+                    // policy.AllowAnyOrigin() // Less secure, generally not for production
+                    //       .AllowAnyHeader()
+                    //       .AllowAnyMethod();
+                });
+        });
 
         builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
         builder.Services.AddSingleton<IOrchestrator, NewOrchestrator>();
@@ -30,6 +50,7 @@ public class Program
         builder.Services.AddTransient<IStationService, StationService>();
 
         builder.Services.AddHostedService<SimulationBackgroundService>();
+        builder.Services.AddHostedService<PollBackgroundService>();
 
         var app = builder.Build();
         if (app.Environment.IsDevelopment())
@@ -39,6 +60,7 @@ public class Program
         }
 
 
+        app.UseCors("MyAllowSpecificOrigins");
         app.MapControllers();
         app.Run();
     }

@@ -3,6 +3,7 @@ using BusSimulationMinimal.Services.Configuration.Interface;
 using BusSimulationMinimal.Services.Simulation.Interface;
 using BusSimulationMinimal.Services.Simulation.States;
 using BusSimulationMinimal.Services.Simulation.Typing;
+
 // For SimulationState
 
 // For Bus, Station, Passenger models
@@ -57,11 +58,12 @@ public class NewOrchestrator : IOrchestrator
 
         if (snapshotToSerialize == null) return "{}";
 
-        return JsonSerializer.Serialize(snapshotToSerialize, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        return JsonSerializer.Serialize(snapshotToSerialize,
+            new JsonSerializerOptions
+            {
+                WriteIndented = true, // For better readability in JSON output
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Use camelCase for JSON properties
+            });
     }
 
     public void StartSimulation()
@@ -112,7 +114,7 @@ public class NewOrchestrator : IOrchestrator
         lock (_simulationWriteLock) // Ensure entire reset is atomic
         {
             // Re-initialize both live and snapshot states
-            InitializeSimulationStateAndFirstSnapshot();
+            InitializeSimulationStateAndFirstSnapshot(_liveSimulationState.CurrentTime);
             // IsRunning will be false by default from InitializeSimulationStateAndFirstSnapshot
         }
     }
@@ -174,7 +176,19 @@ public class NewOrchestrator : IOrchestrator
         return result;
     }
 
-    private void InitializeSimulationStateAndFirstSnapshot()
+    public void GeneratePassengersOnStations(string id, int count)
+    {
+        lock (_simulationWriteLock) // Ensure thread-safe access to _liveSimulationState
+        {
+            if (_liveSimulationState == null)
+                throw new InvalidOperationException("Simulation not initialized.");
+
+            _passengerService.GeneratePassengersOnStation(_liveSimulationState, _configurationService.PassengerConf, _configurationService.SimulationConf, id, count);
+            UpdateReadableSnapshotInternal(); // Update snapshot after generating passengers
+        }
+    }
+
+    private void InitializeSimulationStateAndFirstSnapshot(DateTime? startTime = null)
     {
         // This method is called only from the constructor, so no external lock needed here.
         // However, modifications to _liveSimulationState and _readableSnapshotState need to be safe.
@@ -195,7 +209,7 @@ public class NewOrchestrator : IOrchestrator
         {
             Stations = initialStations,
             Buses = new List<Bus>(),
-            CurrentTime = DateTime.Now, // Default start time
+            CurrentTime = startTime ?? DateTime.Now, // Default start time
             IsRunning = false,
             TotalRouteLengthKm = routeConfig.TotalRouteLengthKm
         };

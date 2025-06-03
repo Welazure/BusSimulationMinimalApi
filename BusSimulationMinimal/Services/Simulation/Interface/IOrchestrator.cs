@@ -12,4 +12,6 @@ public interface IOrchestrator
     bool InstructBusToReturnToPool(Guid busId);
     bool InstructBusToMoveFromPool(Guid busId);
     bool DestructBus(Guid busId);
+    
+    void GeneratePassengersOnStations(string id, int count);
 }

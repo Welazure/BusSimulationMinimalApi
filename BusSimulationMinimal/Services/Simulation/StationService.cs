@@ -27,14 +27,15 @@ public class StationService : IStationService
                     bus.CurrentStationId = null;
                     bus.TimeSpentAtStationSec = 0;
                     currStation.CurrentBusId = null; // Free the station platfo
-                    bus.NextStationId = _busService.GetNextStationId(state, currStation.Id);
+                    bus.NextStationId = _busService.GetNextStationId(state, currStation.Id, bus.ReturningToPool, !bus.GoingForward);
+                    bus.GoingForward = _busService.GetNextDirection(state, currStation.Id, bus.NextStationId);
                     continue;
                 }
 
                 // Bus is valid, calculate.
-                if (bus.TimeSpentAtStationSec >= simulationConfig.MaximumBusWaitTimeSeconds ||
-                    (bus.Passengers.Count >= bus.Capacity &&
-                     bus.Passengers.Count(x => x.DestinationStationId == currStation.Id) < 0))
+                if (((bus.TimeSpentAtStationSec >= simulationConfig.MaximumBusWaitTimeSeconds) ||
+                    (bus.TimeSpentAtStationSec > 5 && bus.Passengers.Count >= bus.Capacity &&
+                     bus.Passengers.Count(x => x.DestinationStationId == currStation.Id) < 1)) & !bus.Passengers.Any(x => x.DestinationStationId == currStation.Id))
                 {
                     bus.Status = BusStatus.MOVING;
                     bus.CurrentStationId = null;
@@ -43,13 +44,14 @@ public class StationService : IStationService
                     continue;
                 }
 
+                bool passengersChanged = false;
                 // Time has not exceeded maximum wait time, continue processing
                 bus.TimeSpentAtStationSec += 1.0; // Increment time spent at station
 
                 // Calculate processing ratio
                 int alightingCount, boardingCount, totalToProcess = simulationConfig.PassengerInteractionPerSecond;
 
-                if (bus.ReturningToPool)
+                if (bus.ReturningToPool || bus.TimeSpentAtStationSec >= simulationConfig.MaximumBusWaitTimeSeconds)
                 {
                     alightingCount = totalToProcess;
                     boardingCount = 0;
@@ -69,25 +71,35 @@ public class StationService : IStationService
                     var passenger = toBeAlighted[Random.Shared.Next(0, toBeAlighted.Count)];
                     passenger.Status = PassengerStatus.ALIGHTED;
                     bus.Passengers.Remove(passenger);
+                    passengersChanged = true;
                 }
 
-                var eligibleToBoard = currStation.WaitingPassengers.Where(x => x.Status == PassengerStatus.WAITING)
+                var eligibleToBoard = currStation.WaitingPassengers.Where(x => x.Status == PassengerStatus.WAITING )
                     .ToList();
+                var nextStationIds = _busService.GetNextStationIdsNoLoop(state, currStation.Id, !bus.GoingForward);
                 for (var i = 0; i < boardingCount; i++)
                 {
+                    
                     if (bus.Passengers.Count >= bus.Capacity) break;
                     if (eligibleToBoard.Count < 1) break;
                     var passenger =
                         eligibleToBoard[
                             Random.Shared.Next(0, eligibleToBoard.Count)];
+                    if (!nextStationIds.Contains(passenger.DestinationStationId))
+                        continue;
                     passenger.Status = PassengerStatus.ON_BUS;
                     bus.Passengers.Add(passenger);
                     currStation.WaitingPassengers.Remove(passenger);
                     eligibleToBoard.Remove(passenger); // Remove from the temporary list for this tick's processing
+                    passengersChanged = true;
                 }
 
-                if (!currStation.WaitingPassengers.Any(x => x.Status == PassengerStatus.WAITING) &&
-                    !bus.Passengers.Any(x => x.DestinationStationId == currStation.Id))
+                if (!passengersChanged)
+                {
+                    bus.TimeSpentWithoutChange += 1;
+                }
+                if ((!currStation.WaitingPassengers.Any(x => x.Status == PassengerStatus.WAITING) &&
+                    !bus.Passengers.Any(x => x.DestinationStationId == currStation.Id)) && bus.TimeSpentWithoutChange > 10)
                 {
                     bus.Status = BusStatus.MOVING;
                     bus.CurrentStationId = null;
@@ -109,7 +121,8 @@ public class StationService : IStationService
                     waitingBus.TimeSpentAtStationSec = 0;
                     waitingBus.CurrentStationId = currStation.Id;
                     currStation.WaitingBuses.Remove(waitingBus.Id);
-                    waitingBus.NextStationId = _busService.GetNextStationId(state, currStation.Id);
+                    waitingBus.NextStationId = _busService.GetNextStationId(state, currStation.Id, waitingBus.ReturningToPool, !waitingBus.GoingForward);
+                    waitingBus.GoingForward = _busService.GetNextDirection(state, currStation.Id, waitingBus.NextStationId);
                 }
             }
     }

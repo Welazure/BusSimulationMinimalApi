@@ -3,18 +3,16 @@ using BusSimulationMinimal.Services.Simulation.Interface;
 
 namespace BusSimulationMinimal.Services.Simulation;
 
-public class SimulationBackgroundService : IHostedService, IDisposable
+public class PollBackgroundService : IHostedService, IDisposable
 {
     private readonly IConfigurationService _config;
     private readonly ILogger<SimulationBackgroundService> _logger;
-    private readonly IOrchestrator _orchestrator;
     private Timer? _timer;
-
-    public SimulationBackgroundService(ILogger<SimulationBackgroundService> logger, IOrchestrator orchestrator,
+    private static readonly HttpClient client = new HttpClient();
+    public PollBackgroundService(ILogger<SimulationBackgroundService> logger,
         IConfigurationService config)
     {
         _logger = logger;
-        _orchestrator = orchestrator;
         _config = config;
     }
 
@@ -28,7 +26,7 @@ public class SimulationBackgroundService : IHostedService, IDisposable
     {
         _logger.LogInformation("{serviceName} is starting.", nameof(SimulationBackgroundService));
         _timer = new Timer(DoWork, null, TimeSpan.Zero,
-            TimeSpan.FromMilliseconds(_config.SimulationConf.TickIntervalMilliseconds));
+            TimeSpan.FromMilliseconds(1000));
         return Task.CompletedTask;
     }
 
@@ -43,10 +41,12 @@ public class SimulationBackgroundService : IHostedService, IDisposable
 
     private void DoWork(object? state)
     {
-        _logger.LogInformation("SimulationBackgroundService is working.");
+        // _logger.LogInformation("SimulationBackgroundService is working.");
         try
         {
-            _orchestrator.PerformSimulationTick();
+            var response = client.PostAsync("http://localhost:3000/api/log_snapshot", new StringContent("")).Result;
+            //var response2 = client.PostAsync("http://localhost:3000/api/dispatch", new StringContent("")).Result;
+            Console.WriteLine("tick performed.");
         }
         catch (Exception ex)
         {

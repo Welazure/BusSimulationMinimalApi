@@ -11,6 +11,10 @@ public class Station
     public Guid? CurrentBusId { get; set; }
     public List<Guid> WaitingBuses { get; set; } = new();
 
+    public int DensityThreshold { get; set; } = 100; // Default value, can be overridden
+    
+    public bool isOverCrowded => WaitingPassengers.Count > DensityThreshold;
+
     public Station DeepClone()
     {
         var clone = new Station

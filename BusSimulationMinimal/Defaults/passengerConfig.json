@@ -1,25 +1,25 @@
 {
-  "BasePassengerSpawnRate": 2,
+  "BasePassengerSpawnRate": 1,
   "GenerationMultiplierGraph": [
     {
       "TimeOfDay": "07:00:00",
-      "Multiplier": 1.5
+      "Multiplier": 0.75
     },
     {
       "TimeOfDay": "09:00:00",
-      "Multiplier": 1.0
+      "Multiplier": 0.5
     },
     {
       "TimeOfDay": "12:00:00",
-      "Multiplier": 0.8
+      "Multiplier": 0.4
     },
     {
       "TimeOfDay": "17:00:00",
-      "Multiplier": 2.0
+      "Multiplier": 1.0
     },
     {
       "TimeOfDay": "19:00:00",
-      "Multiplier": 1.2
+      "Multiplier": 0.6
     }
   ],
   "DestinationWeights": {

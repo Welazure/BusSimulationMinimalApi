@@ -10,12 +10,12 @@ public class PassengerService : IPassengerService
     public void GeneratePassengers(SimulationState state, PassengerConfig passengerConfig,
         SimulationConfig simulationConfig)
     {
-        if (state.CurrentTime.Second % Random.Shared.Next(2, 6) != 0)
-            return;
         var passengerGenerationMultiplier = GetCurrentGenerationMultiplier(
             state.CurrentTime.TimeOfDay, passengerConfig.GenerationMultiplierGraph);
         foreach (var station in state.Stations)
         {
+            if (state.CurrentTime.Second % Random.Shared.Next(15, 60) != 0)
+                continue;
             if (station.Id == "POOL")
                 continue;
             var baseNum = passengerConfig.BasePassengerSpawnRate * passengerGenerationMultiplier;
@@ -55,6 +55,7 @@ public class PassengerService : IPassengerService
                 passenger.Id = Guid.NewGuid();
                 passenger.OriginStationId = station.Id;
                 passenger.Status = PassengerStatus.WAITING;
+                passenger.CreationTime = state.CurrentTime;
 
                 var weight = Random.Shared.Next(0, totalWeight);
                 var destinationStationId = destinationWeightPoints.FirstOrDefault(w => (weight -= w.Weight) < 0)
@@ -63,6 +64,65 @@ public class PassengerService : IPassengerService
                 if (!string.IsNullOrEmpty(destinationStationId))
                     station.WaitingPassengers.Add(passenger);
             }
+        }
+    }
+
+    public void GeneratePassengersOnStation(SimulationState state, PassengerConfig passengerConfig, SimulationConfig simulationConfig, string stationId,
+        int? numToSpawn)
+    {
+        var passengerGenerationMultiplier = GetCurrentGenerationMultiplier(
+            state.CurrentTime.TimeOfDay, passengerConfig.GenerationMultiplierGraph);
+        var station = state.Stations.FirstOrDefault(x => x.Id == stationId);
+        if (station == null)
+            return;
+        if(!numToSpawn.HasValue)
+        {
+            var baseNum = passengerConfig.BasePassengerSpawnRate * passengerGenerationMultiplier;
+            var jitter = (Random.Shared.NextDouble() * 2 - 1) * simulationConfig.PassengerSpawnJitterFactor *
+                         baseNum;
+            numToSpawn = (int)Math.Max(0, Math.Round(baseNum + jitter));
+        }
+
+        List<DestinationWeightPoint> destinationWeightPoints = new();
+        var totalWeight = 0;
+        if (passengerConfig.DestinationWeights.TryGetValue(station.Id, out var destinationsFromThisOrigin))
+        {
+            if (destinationsFromThisOrigin.Count != 0)
+            {
+                // This sum should ideally be pre-calculated when config is loaded, per origin.
+                var totalWeightForThisOrigin = destinationsFromThisOrigin.Sum(dw => dw.Weight);
+                if (totalWeightForThisOrigin > 0)
+                {
+                    // Weights are already normalized to 100, no need to adjust.
+                    destinationWeightPoints = destinationsFromThisOrigin;
+                    totalWeight = totalWeightForThisOrigin;
+                }
+                else
+                {
+                    throw new ArgumentException("Weights for destination weights cannot be zero or negative.");
+                }
+            }
+        }
+        else
+        {
+            throw new ArgumentException(
+                $"No destination weights configured for station {station.Id} ({station.Name}).");
+        }
+
+        for (var i = 0; i < numToSpawn; i++)
+        {
+            var passenger = new Passenger();
+            passenger.Id = Guid.NewGuid();
+            passenger.OriginStationId = station.Id;
+            passenger.Status = PassengerStatus.WAITING;
+            passenger.CreationTime = state.CurrentTime;
+
+            var weight = Random.Shared.Next(0, totalWeight);
+            var destinationStationId = destinationWeightPoints.FirstOrDefault(w => (weight -= w.Weight) < 0)
+                ?.DestinationStationId;
+            passenger.DestinationStationId = destinationStationId ?? string.Empty;
+            if (!string.IsNullOrEmpty(destinationStationId))
+                station.WaitingPassengers.Add(passenger);
         }
     }
 
@@ -136,5 +196,15 @@ public class PassengerService : IPassengerService
         var interpolatedMultiplier = m1 + (currentTimeSeconds - t1Seconds) * (m2 - m1) / (t2Seconds - t1Seconds);
 
         return interpolatedMultiplier;
+    }
+
+    public void CleanupPassenger(SimulationState state, PassengerConfig passengerConfig)
+    {
+        foreach (var station in state.Stations)
+        {
+            station.WaitingPassengers.RemoveAll(p => p.Status == PassengerStatus.ALIGHTED ||
+                                                     p.CreationTime.AddSeconds(passengerConfig.TimeToLiveSeconds) <
+                                                     state.CurrentTime);
+        }
     }
 }

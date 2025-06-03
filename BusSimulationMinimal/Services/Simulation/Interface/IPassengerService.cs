@@ -7,4 +7,8 @@ public interface IPassengerService
 {
     public void GeneratePassengers(SimulationState state, PassengerConfig passengerConfig,
         SimulationConfig simulationConfig);
+
+    public void GeneratePassengersOnStation(SimulationState state, PassengerConfig passengerConfig,
+        SimulationConfig simulationConfig, string stationId,
+        int? numToSpawn);
 }

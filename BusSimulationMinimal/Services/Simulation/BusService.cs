@@ -16,20 +16,29 @@ public class BusService : IBusService
             if (string.IsNullOrEmpty(bus.NextStationId)) continue;
             var distanceThisTick = simulationConfig.BusSpeedKmh / 3600.0;
             var previousPosition = bus.PositionOnRouteKm; // Store for precise arrival detection
-            bus.PositionOnRouteKm = (bus.PositionOnRouteKm + distanceThisTick) % routeConfig.TotalRouteLengthKm;
-
+            bus.PositionOnRouteKm = (bus.GoingForward
+                                        ? bus.PositionOnRouteKm + distanceThisTick
+                                        : bus.PositionOnRouteKm - distanceThisTick)
+                                    % routeConfig.TotalRouteLengthKm;
+            if (bus.PositionOnRouteKm < 0)
+                bus.PositionOnRouteKm += routeConfig.TotalRouteLengthKm; // Wrap around the route;
             var nextStation = state.Stations.FirstOrDefault(x => x.Id == bus.NextStationId);
             if (nextStation == null) continue;
             var arrived = false;
-            if (previousPosition < nextStation.PositionOnRouteKm &&
-                bus.PositionOnRouteKm >= nextStation.PositionOnRouteKm)
-                arrived = true;
-            else if (previousPosition > bus.PositionOnRouteKm) // Bus wrapped around the route
-                if (bus.PositionOnRouteKm >= nextStation.PositionOnRouteKm ||
-                    previousPosition < nextStation.PositionOnRouteKm) // Station is after wrap or before wrap
-                    arrived = true;
+            // if (previousPosition < nextStation.PositionOnRouteKm &&
+            //     bus.PositionOnRouteKm >= nextStation.PositionOnRouteKm)
+            //     arrived = true;
+            // else if (previousPosition > bus.PositionOnRouteKm) // Bus wrapped around the route
+            //     if (bus.PositionOnRouteKm >= nextStation.PositionOnRouteKm ||
+            //         previousPosition < nextStation.PositionOnRouteKm) // Station is after wrap or before wrap
+            //         arrived = true;
 
-            if (arrived)
+            if (!bus.GoingForward && bus.PositionOnRouteKm <= 30 && bus.PositionOnRouteKm > 29)
+            {
+                Console.WriteLine("aa");
+            }
+
+            if (Math.Abs(bus.PositionOnRouteKm - nextStation.PositionOnRouteKm) < 0.15)
             {
                 bus.PositionOnRouteKm = nextStation.PositionOnRouteKm; // Snap to station
 
@@ -39,7 +48,10 @@ public class BusService : IBusService
                     bus.Status = BusStatus.AT_STATION;
                     bus.TimeSpentAtStationSec = 0;
                     bus.CurrentStationId = nextStation.Id;
-                    bus.NextStationId = GetNextStationId(state, nextStation.Id); // <-- SET NEXT TARGET
+                    bus.NextStationId =
+                        GetNextStationId(state, nextStation.Id, bus.ReturningToPool,
+                            !bus.GoingForward); // <-- SET NEXT TARGET
+                    bus.GoingForward = GetNextDirection(state, nextStation.Id, bus.NextStationId);
                 }
                 else
                 {
@@ -50,16 +62,52 @@ public class BusService : IBusService
         }
     }
 
-    public string GetNextStationId(SimulationState state, string currentStationId)
+    public string[] GetNextStationIdsNoLoop(SimulationState state, string currentStationId, bool reversed = false)
     {
         var stationIds = state.Stations.Select(x => x.Id).ToList();
         var currentIndex = stationIds.IndexOf(currentStationId);
         if (currentIndex == -1 || stationIds.Count == 0)
             throw new ArgumentException("Current station ID not found in the list of stations.");
+        if (!reversed)
+            return stationIds.Skip(currentIndex + 1).ToArray();
+        else
+        {
+            return stationIds.Take(currentIndex).ToArray();
+        }
+    }
 
-        var nextIndex = (currentIndex + 1) % stationIds.Count; // Wrap around to the first station
+    public string GetNextStationId(SimulationState state, string currentStationId, bool? includePool,
+        bool reversed = false)
+    {
+        var stationIds = state.Stations.Select(x => x.Id).ToList();
+        var currentIndex = stationIds.IndexOf(currentStationId);
+        if (currentIndex == -1 || stationIds.Count == 0)
+            throw new ArgumentException("Current station ID not found in the list of stations.");
+        var nextIndex =
+            (reversed ? currentIndex - 1 : currentIndex + 1) % stationIds.Count; // Wrap around to the first station
+        if (nextIndex < 0) nextIndex += stationIds.Count; // Ensure non-negative index
+        if (includePool != null && !includePool.Value && stationIds[nextIndex] == "POOL")
+            if (reversed)
+            {
+                nextIndex = (currentIndex + 1) % stationIds.Count;
+            }
+            else
+            {
+                nextIndex = (currentIndex - 1) % stationIds.Count;
+            }
+        if (nextIndex < 0) nextIndex += stationIds.Count;
         return stationIds[nextIndex];
     }
+
+    public bool GetNextDirection(SimulationState state, string currentStationId, string nextStationId)
+    {
+        var currentIndex = state.Stations.FindIndex(x => x.Id == currentStationId);
+        var nextIndex = state.Stations.FindIndex(x => x.Id == nextStationId);
+        if (currentIndex == -1 || nextIndex == -1)
+            throw new ArgumentException("Current or next station ID not found in the list of stations.");
+        return nextIndex > currentIndex; // True if going forward, false if going backward
+    }
+
 
     public void DispatchBus(SimulationState state, SimulationConfig simulationConfig, RouteConfig routeConfig,
         int? capacityOverride,
@@ -71,7 +119,6 @@ public class BusService : IBusService
         var startStation = state.Stations
             .FirstOrDefault(x => x.Id == (startAtStationIdOverride ?? "POOL"));
         if (startStation == null) throw new ArgumentException("Start station not found in route configuration.");
-
         if (startStation.CurrentBusId != null)
         {
             if (!startStation.WaitingBuses.Contains(bus.Id))
@@ -85,7 +132,8 @@ public class BusService : IBusService
             bus.Status = BusStatus.AT_STATION;
             bus.TimeSpentAtStationSec = 0;
             bus.CurrentStationId = startStation.Id;
-            bus.NextStationId = GetNextStationId(state, startStation.Id);
+            bus.NextStationId = GetNextStationId(state, startStation.Id, bus.ReturningToPool, !bus.GoingForward);
+            bus.GoingForward = GetNextDirection(state, startStation.Id, bus.NextStationId);
         }
 
         bus.PositionOnRouteKm = startStation.PositionOnRouteKm;
@@ -108,7 +156,9 @@ public class BusService : IBusService
 
         bus.Status = BusStatus.AT_STATION;
         bus.PositionOnRouteKm = state.Stations.FirstOrDefault(x => x.Id == "POOL")?.PositionOnRouteKm ?? 0;
-        bus.NextStationId = GetNextStationId(state, bus.CurrentStationId);
+        var nextStationId = GetNextStationId(state, bus.CurrentStationId, bus.ReturningToPool, !bus.GoingForward);
+        bus.GoingForward = GetNextDirection(state, bus.CurrentStationId, nextStationId);
+        bus.NextStationId = nextStationId;
         return true;
     }
 
